@@ -20,7 +20,8 @@ func main() {
       Name: "add",
       Usage: "Add key to the key server",
       Action: func(c *cli.Context) {
-        fmt.Println("Action")//Keygen()
+        fmt.Println("Generating a self-signed certificate")
+        Keygen()
       },
     },
     {

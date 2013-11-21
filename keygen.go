@@ -7,12 +7,26 @@ import (
   "net"
   "os"
   "os/exec"
+  "io"
 )
+
+func pipeOutput(cmd *exec.Cmd) {
+  stdout, err := cmd.StdoutPipe()
+  if err == nil {
+    go io.Copy(os.Stdout, stdout)
+  }
+
+  stderr, err := cmd.StderrPipe()
+  if err == nil {
+    go io.Copy(os.Stderr, stderr)
+  }
+}
 
 var openssl string = "openssl"
 
 func privateKey() error {
   cmd := exec.Command(openssl, "genrsa", "-out", "server.key", "4096")
+  pipeOutput(cmd)
   return cmd.Run()
 }
 
@@ -65,6 +79,7 @@ func csr(dns []string, ip[]string) error {
     "-new", "-key", "server.key", "-out",
     "server.csr","-config", "openssl.cfg",
     "-subj", "/CN=" + hostname)
+  pipeOutput(cmd)
   return cmd.Run()
 }
 

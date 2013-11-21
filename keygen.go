@@ -83,6 +83,18 @@ func csr(dns []string, ip[]string) error {
   return cmd.Run()
 }
 
+func sign() error {
+  cmd := exec.Command(openssl, "x509", "-req", "-days", "3650", "-in",
+    "server.csr", "-signkey", "server.key", "-out", "server.crt")
+  pipeOutput(cmd)
+  return cmd.Run()
+}
+
+func cleanup() {
+  os.Remove("server.csr")
+  os.Remove("openssl.cfg")
+}
+
 func Keygen(domains []string) error {
   err := privateKey()
   if err != nil {
@@ -120,6 +132,13 @@ func Keygen(domains []string) error {
   if err != nil {
     return errors.New("Generating a CSR failed")
   }
+
+  err = sign()
+  if err != nil {
+    return errors.New("Signing certificate failed")
+  }
+
+  cleanup()
 
   return nil
 }

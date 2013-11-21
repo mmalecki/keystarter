@@ -21,7 +21,7 @@ func main() {
       Usage: "Add key to the key server",
       Action: func(c *cli.Context) {
         fmt.Println("Generating a self-signed certificate")
-        Keygen()
+        Keygen([]string{})
       },
     },
     {

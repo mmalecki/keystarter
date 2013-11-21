@@ -60,8 +60,11 @@ func csr(dns []string, ip[]string) error {
     return err
   }
 
-  // How the fuck do I multiline this?
-  cmd := exec.Command(openssl, "req", "-new", "-key", "server.key", "-out", "server.csr","-config", "openssl.cfg", "-subj", "/CN=" + hostname)
+  // MULTILINEEE, jelly much ( ≖‿≖)?
+  cmd := exec.Command(openssl, "req",
+    "-new", "-key", "server.key", "-out",
+    "server.csr","-config", "openssl.cfg",
+    "-subj", "/CN=" + hostname)
   return cmd.Run()
 }
 

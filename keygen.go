@@ -1,25 +1,25 @@
 package main
 
 import (
+  "errors"
   "fmt"
   "net"
   "os/exec"
-  "errors"
 )
 
 var openssl string = "openssl"
 
-func privateKey() (error) {
+func privateKey() error {
   cmd := exec.Command(openssl, "genrsa", "-out", "server.key", "4096")
   return cmd.Run()
 }
 
-func csr(domains []string) (error) {
+func csr(domains []string) error {
   cmd := exec.Command(openssl, "req", "new", "-key", "server.key", "-out", "server.csr")
   return cmd.Run()
 }
 
-func Keygen(domains []string) (error) {
+func Keygen(domains []string) error {
   err := privateKey()
   if err != nil {
     return errors.New("Generating a private key failed")
@@ -32,12 +32,12 @@ func Keygen(domains []string) (error) {
 
   for i := range ifaces {
     if ifaces[i].Flags & net.FlagLoopback == net.FlagLoopback {
-      continue;
+      continue
     }
 
     addrs, err := ifaces[i].Addrs()
     if err != nil {
-      continue;
+      continue
     }
 
     for j := range addrs {

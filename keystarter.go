@@ -1,9 +1,9 @@
 package main
 
-import(
+import (
   "fmt"
-  "os"
   "github.com/codegangsta/cli"
+  "os"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 
   app.Commands = []cli.Command{
     {
-      Name: "add",
+      Name:  "add",
       Usage: "Add key to the key server",
       Action: func(c *cli.Context) {
         fmt.Println("Generating a self-signed certificate")
@@ -25,13 +25,12 @@ func main() {
       },
     },
     {
-      Name: "remove",
+      Name:  "remove",
       Usage: "Remove key from the key server",
       Action: func(c *cli.Context) {
       },
     },
-  };
+  }
 
   app.Run(os.Args)
 }
-

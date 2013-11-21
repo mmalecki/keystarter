@@ -1,9 +1,11 @@
 package main
 
 import (
+  "strconv"
   "errors"
   "fmt"
   "net"
+  "os"
   "os/exec"
 )
 
@@ -14,8 +16,52 @@ func privateKey() error {
   return cmd.Run()
 }
 
-func csr(domains []string) error {
-  cmd := exec.Command(openssl, "req", "new", "-key", "server.key", "-out", "server.csr")
+func csr(dns []string, ip[]string) error {
+  cfg, err := os.Create("openssl.cfg")
+  if err != nil {
+    return err
+  }
+
+  hostname, err := os.Hostname()
+  if err != nil {
+    hostname = "localhost"
+  }
+
+  cfg.WriteString("[req]\n")
+  cfg.WriteString("distinguished_name = req_distinguished_name\n")
+  cfg.WriteString("req_extensions = v3_req\n")
+  cfg.WriteString("[req_distinguished_name]\n")
+  cfg.WriteString("countryName = Country Name (2 letter code)\n")
+  cfg.WriteString("countryName_default = .\n")
+  cfg.WriteString("stateOrProvinceName = State or Province Name (full name)\n")
+  cfg.WriteString("stateOrProvinceName_default = .\n")
+  cfg.WriteString("localityName = Locality Name (eg, city)\n")
+  cfg.WriteString("localityName_default = .\n")
+  cfg.WriteString("organizationalUnitName = Organizational Unit Name (eg, section)\n")
+  cfg.WriteString("organizationalUnitName_default = .\n")
+  cfg.WriteString("commonName = " + hostname + "\n")
+  cfg.WriteString("commonName_max = 64\n")
+  cfg.WriteString("[v3_req]\n")
+  cfg.WriteString("basicConstraints = CA:FALSE\n")
+  cfg.WriteString("keyUsage = nonRepudiation, digitalSignature, keyEncipherment\n")
+  cfg.WriteString("subjectAltName = @alt_names\n")
+  cfg.WriteString("[alt_names]\n")
+
+  for i := range(dns) {
+    cfg.WriteString("DNS." + strconv.Itoa(i + 1) + " = " + dns[i] + "\n")
+  }
+
+  for i := range(ip) {
+    cfg.WriteString("IP." + strconv.Itoa(i + 1) + " = " + ip[i] + "\n")
+  }
+
+  err = cfg.Close()
+  if err != nil {
+    return err
+  }
+
+  // How the fuck do I multiline this?
+  cmd := exec.Command(openssl, "req", "-new", "-key", "server.key", "-out", "server.csr","-config", "openssl.cfg", "-subj", "/CN=" + hostname)
   return cmd.Run()
 }
 
@@ -30,6 +76,8 @@ func Keygen(domains []string) error {
     return errors.New("Getting network interfaces failed")
   }
 
+  ips := []string{}
+
   for i := range ifaces {
     if ifaces[i].Flags & net.FlagLoopback == net.FlagLoopback {
       continue
@@ -43,14 +91,14 @@ func Keygen(domains []string) error {
     for j := range addrs {
       ip, _, err := net.ParseCIDR(addrs[j].String())
       if err == nil {
-        domains = append(domains, ip.String())
+        ips = append(ips, ip.String())
       }
     }
   }
 
-  fmt.Println("Generating CSR for:", domains)
+  fmt.Println("Generating CSR for:", domains, ips)
 
-  err = csr(domains)
+  err = csr(domains, ips)
   if err != nil {
     return errors.New("Generating a CSR failed")
   }
